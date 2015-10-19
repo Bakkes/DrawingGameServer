@@ -39,9 +39,9 @@
     <Reference Include="Microsoft.Scripting">
       <HintPath>lib\Microsoft.Scripting.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>lib\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="SuperSocket.Common, Version=1.5.1.0, Culture=neutral, PublicKeyToken=6c80000676988ebb, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -82,6 +82,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DrawingGame\DrawingGame.cs" />
+    <Compile Include="DrawingGame\Packet\Request.cs" />
+    <Compile Include="DrawingGame\Packet\Response.cs" />
+    <Compile Include="DrawingGame\Player.cs" />
+    <Compile Include="DrawingGame\Room.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -93,6 +97,7 @@
     <Content Include="Config\log4net.unix.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
