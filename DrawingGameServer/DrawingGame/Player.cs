@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace DrawingGameServer.DrawingGame
 {
     public delegate void MessageReceived(string message);
-    class Player
+    public class Player
     {
         public MessageReceived OnMessageReceived;
         public String ID { get { return session.SessionID; } }
@@ -31,13 +31,25 @@ namespace DrawingGameServer.DrawingGame
             }
         }
 
-        public void Disconnect()
+        public void JoinRoom(Room room)
+        {
+            if (CurrentRoom != null)
+            {
+                LeaveRoom();
+            }
+
+            CurrentRoom = room;
+            CurrentRoom.AddPlayer(this);
+        }
+
+        public void LeaveRoom()
         {
             if (CurrentRoom == null)
             {
                 return;
             }
             CurrentRoom.RemovePlayer(this);
+            CurrentRoom = null;
         }
 
         public void SendJson(String json)

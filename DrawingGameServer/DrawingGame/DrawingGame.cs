@@ -24,6 +24,7 @@ namespace DrawingGameServer.DrawingGame
         private List<WebSocketSession> sessions;
         private Dictionary<String, Player> players;
         private Dictionary<int, Room> rooms = new Dictionary<int, Room>();
+        private Room Lobby { get { return rooms[-1]; } }
 
         public DrawingGame()
         {
@@ -36,7 +37,7 @@ namespace DrawingGameServer.DrawingGame
             this.sessions = new List<WebSocketSession>();
             this.players = new Dictionary<String, Player>();
             this.rooms = new Dictionary<int, Room>();
-
+            this.rooms.Add(-1, new Room { ID = -1, Name = "Lobby" });
             this.rooms.Add(0, new Room { ID = 0, Name = "TestRoom" });
             this.rooms.Add(1, new Room { ID = 1, Name = "TestRoom2" });
             this.websocketServer = new WebSocketServer();
@@ -74,7 +75,7 @@ namespace DrawingGameServer.DrawingGame
 
             Request request = JsonConvert.DeserializeObject<Request>(value);
             Response response;
-            //Logger.InfoFormat("Got message: {0}", request.Data);
+            Logger.InfoFormat("Got message: {0}", request.Data);
             switch (request.MessageID)
             {
                 case 0://ping, add pong later
@@ -88,17 +89,28 @@ namespace DrawingGameServer.DrawingGame
                     currentPlayer.SendMessage(response);
                     break;
                 case 2://join room
+                    currentPlayer.LeaveRoom();
                     int roomNumber = request.DataJson.ID;
                     if(!rooms.ContainsKey(roomNumber)) 
                     {
                         break;
                     }
-                    rooms[roomNumber].AddPlayer(currentPlayer);
+                    currentPlayer.JoinRoom(rooms[roomNumber]);
+
                     Logger.InfoFormat("Added player {0} to room {1}", currentPlayer.ID, roomNumber);
-                    currentPlayer.CurrentRoom = rooms[roomNumber];
                     break;
 
                 case 3:
+                    if (currentPlayer.CurrentRoom != null)
+                    {
+                        response = new Response
+                        {
+                            MessageID = 10003,
+                            Data = request.DataJson
+                        };
+                        response.Data.author = session.SessionID;
+                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
+                    }
                     break;
 
                 case 4:
@@ -109,13 +121,11 @@ namespace DrawingGameServer.DrawingGame
                             MessageID = 10004,
                             Data = request.DataJson
                         };
-                        request.MessageID = 10004;
-                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer);
+                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
                     }
                     break;
                 case 5:
-                    currentPlayer.CurrentRoom.RemovePlayer(currentPlayer);
-                    currentPlayer.CurrentRoom = null;
+                    currentPlayer.LeaveRoom();
                     break;
 
 
@@ -131,7 +141,7 @@ namespace DrawingGameServer.DrawingGame
             Logger.InfoFormat("Session from {0}, reason: ", session.Host, closeReason.ToString());
             Player currentPlayer = players[session.SessionID];
             sessions.Remove(session);
-            currentPlayer.Disconnect();
+            currentPlayer.LeaveRoom();
             players.Remove(session.SessionID);
         }
 
@@ -141,6 +151,7 @@ namespace DrawingGameServer.DrawingGame
             sessions.Add(session);
             Player p = new Player(session);
             players.Add(p.ID, p);
+            p.JoinRoom(Lobby);
         }
 
         public void Serve()

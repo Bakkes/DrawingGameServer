@@ -11,6 +11,6 @@ namespace DrawingGameServer.DrawingGame.Packet
     {
         public int MessageID = -1;
 
-        public object Data;
+        public dynamic Data;
     }
 }

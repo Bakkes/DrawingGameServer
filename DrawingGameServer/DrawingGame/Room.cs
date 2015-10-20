@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DrawingGameServer.DrawingGame
 {
-    class Room
+    public class Room
     {
         public static readonly int CAPACITY = 16; //max players per room
 
@@ -76,7 +76,7 @@ namespace DrawingGameServer.DrawingGame
                     return;
                 }
             }
-            foreach (Player p in players.Where(x => !ignore.Contains(x) && x != currentDrawingPlayer))
+            foreach (Player p in players.Where(x => !ignore.Contains(x)))
             {
                 p.SendMessage(data);
             }
