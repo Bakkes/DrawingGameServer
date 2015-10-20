@@ -33,6 +33,10 @@ namespace DrawingGameServer.DrawingGame
 
         public void Disconnect()
         {
+            if (CurrentRoom == null)
+            {
+                return;
+            }
             CurrentRoom.RemovePlayer(this);
         }
 

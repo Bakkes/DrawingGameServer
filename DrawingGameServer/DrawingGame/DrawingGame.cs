@@ -38,7 +38,7 @@ namespace DrawingGameServer.DrawingGame
             this.rooms = new Dictionary<int, Room>();
 
             this.rooms.Add(0, new Room { ID = 0, Name = "TestRoom" });
-
+            this.rooms.Add(1, new Room { ID = 1, Name = "TestRoom2" });
             this.websocketServer = new WebSocketServer();
             this.websocketServer.NewSessionConnected += new SessionHandler<WebSocketSession>(websocketServer_NewSessionConnected);
             this.websocketServer.SessionClosed += new SessionHandler<WebSocketSession, SuperSocket.SocketBase.CloseReason>(websocketServer_SessionClosed);
@@ -69,16 +69,23 @@ namespace DrawingGameServer.DrawingGame
 
         private void websocketServer_NewMessageReceived(WebSocketSession session, string value)
         {
-            Logger.InfoFormat("Received message {0}", value);
+            //Logger.InfoFormat("Received message {0}", value);
             Player currentPlayer = players[session.SessionID];
 
             Request request = JsonConvert.DeserializeObject<Request>(value);
-            Logger.InfoFormat("Got message: {0}", request.Data);
+            Response response;
+            //Logger.InfoFormat("Got message: {0}", request.Data);
             switch (request.MessageID)
             {
                 case 0://ping, add pong later
                     break;
                 case 1://list rooms
+                    response = new Response
+                    {
+                        MessageID = 10001,
+                        Data = rooms.Select(x => new { ID = x.Value.ID, Name = x.Value.Name, Players = x.Value.Players.Count, MaxPlayers = Room.CAPACITY })
+                    };
+                    currentPlayer.SendMessage(response);
                     break;
                 case 2://join room
                     int roomNumber = request.DataJson.ID;
@@ -97,7 +104,7 @@ namespace DrawingGameServer.DrawingGame
                 case 4:
                     if (currentPlayer.CurrentRoom != null)
                     {
-                        Response response = new Response
+                        response = new Response
                         {
                             MessageID = 10004,
                             Data = request.DataJson

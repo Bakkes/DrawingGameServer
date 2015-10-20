@@ -9,6 +9,8 @@ namespace DrawingGameServer.DrawingGame
 {
     class Room
     {
+        public static readonly int CAPACITY = 16; //max players per room
+
         private int id;
 
         public int ID
