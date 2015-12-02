@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using log4net;
+using Newtonsoft.Json;
 using SuperSocket.WebSocket;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace DrawingGameServer.DrawingGame
     public delegate void MessageReceived(string message);
     public class Player
     {
+        private static readonly log4net.ILog Logger = LogManager.GetLogger(typeof(DrawingGame));
+
         public MessageReceived OnMessageReceived;
         public String ID { get { return session.SessionID; } }
         public WebSocketSession Session { get { return session; } }
@@ -59,7 +62,8 @@ namespace DrawingGameServer.DrawingGame
 
         public void SendMessage(object message)
         {
-            this.SendJson(JsonConvert.SerializeObject(message));
+            string jsonMsg = JsonConvert.SerializeObject(message);
+            this.SendJson(jsonMsg);
         }
 
 

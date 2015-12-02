@@ -96,11 +96,14 @@ namespace DrawingGameServer.DrawingGame
                         break;
                     }
                     currentPlayer.JoinRoom(rooms[roomNumber]);
-
+                    //if(!rooms[roomNumber].Players.Any())
+                    //{
+                    //    rooms[roomNumber].currentDrawingPlayer = currentPlayer;
+                    //}
                     Logger.InfoFormat("Added player {0} to room {1}", currentPlayer.ID, roomNumber);
                     break;
 
-                case 3:
+                case 3: //say
                     if (currentPlayer.CurrentRoom != null)
                     {
                         response = new Response
@@ -113,7 +116,7 @@ namespace DrawingGameServer.DrawingGame
                     }
                     break;
 
-                case 4:
+                case 4: //figure
                     if (currentPlayer.CurrentRoom != null)
                     {
                         response = new Response
@@ -127,8 +130,28 @@ namespace DrawingGameServer.DrawingGame
                 case 5:
                     currentPlayer.LeaveRoom();
                     break;
+                case 6: //undo
+                    if (currentPlayer.CurrentRoom != null)
+                    {
+                        response = new Response()
+                        {
+                            MessageID = 10006,
+                            Data = request.DataJson
+                        };
+                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
+                    }
+                    break;
 
-
+                case 7: //redo
+                    if (currentPlayer.CurrentRoom != null)
+                    {
+                        response = new Response()
+                        {
+                            MessageID = 10007,
+                        };
+                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
+                    }
+                    break;
                 default:
                     //players[session.SessionID].ReceiveMessage(value);
                     break;
@@ -151,7 +174,7 @@ namespace DrawingGameServer.DrawingGame
             sessions.Add(session);
             Player p = new Player(session);
             players.Add(p.ID, p);
-            p.JoinRoom(Lobby);
+            //p.JoinRoom(Lobby);
         }
 
         public void Serve()

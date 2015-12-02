@@ -27,7 +27,38 @@ namespace DrawingGameServer.DrawingGame
             set { name = value; }
         }
 
-        public Player currentDrawingPlayer { get; set; }
+        private Player currentDrawingPlayer;
+
+        public Player CurrentDrawingPlayer
+        {
+            get
+            {
+                return currentDrawingPlayer;
+            }
+            set
+            {
+                
+                if(value == null)
+                {
+                    return; //must always be someone, close room?
+                }
+                currentDrawingPlayer = value;
+                Response resp = new Response()
+                {
+                    MessageID = 10008,
+                    Data = new { Turn = true }
+                };
+                currentDrawingPlayer.SendMessage(resp);
+
+                
+                Broadcast(new Response()
+                {
+                    MessageID = 10008,
+                    Data = new { Turn = false }
+                }, currentDrawingPlayer, currentDrawingPlayer);
+                Broadcast(new Response() { MessageID = 10009 }, currentDrawingPlayer);
+            }
+        }
         
 
         private List<Player> players;
@@ -47,22 +78,29 @@ namespace DrawingGameServer.DrawingGame
             this.players.Add(p);
             if (players.Count == 1)
             {
-                currentDrawingPlayer = p;
+                CurrentDrawingPlayer = p;
+            } else
+            {
+                p.SendMessage(new Response()
+                {
+                    MessageID = 10008,
+                    Data = new { Turn = false }
+                });
             }
         }
 
         public void RemovePlayer(Player p)
         {
             this.players.Remove(p);
-            if (currentDrawingPlayer == p)
+            if (CurrentDrawingPlayer == p)
             {
                 if (players.Any())
                 {
-                    currentDrawingPlayer = players.First();
+                    CurrentDrawingPlayer = players.First();
                 }
                 else
                 {
-                    currentDrawingPlayer = null; //close room
+                    CurrentDrawingPlayer = null; //close room
                 }
             }
         }
@@ -71,11 +109,12 @@ namespace DrawingGameServer.DrawingGame
         {
             if (data.MessageID == 10004) //drawing, only currently drawing player can do this
             {
-                if (currentDrawingPlayer != source)
+                if (CurrentDrawingPlayer != source)
                 {
                     return;
                 }
             }
+            Console.WriteLine(players.Where(x => !ignore.Contains(x)).Count());
             foreach (Player p in players.Where(x => !ignore.Contains(x)))
             {
                 p.SendMessage(data);
