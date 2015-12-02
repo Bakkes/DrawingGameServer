@@ -85,6 +85,7 @@
     <Compile Include="DrawingGame\Packet\Request.cs" />
     <Compile Include="DrawingGame\Packet\Response.cs" />
     <Compile Include="DrawingGame\Player.cs" />
+    <Compile Include="DrawingGame\RandomWordGenerator.cs" />
     <Compile Include="DrawingGame\Room.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

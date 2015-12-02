@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using DrawingGameServer.DrawingGame.Packet;
+using log4net;
 using Newtonsoft.Json;
 using SuperSocket.WebSocket;
 using System;
@@ -13,6 +14,8 @@ namespace DrawingGameServer.DrawingGame
     public class Player
     {
         private static readonly log4net.ILog Logger = LogManager.GetLogger(typeof(DrawingGame));
+
+        public String Name { get { return ID; } }
 
         public MessageReceived OnMessageReceived;
         public String ID { get { return session.SessionID; } }
@@ -55,6 +58,22 @@ namespace DrawingGameServer.DrawingGame
             CurrentRoom = null;
         }
 
+        public long UnixTimeNow()
+        {
+            var timeSpan = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0));
+            return (long)timeSpan.TotalSeconds;
+        }
+
+        public void SendText(String text)
+        {
+            SendMessage(new Response()
+            {
+                MessageID = 10003,
+                Data = new { author = "GAME", timestamp = UnixTimeNow(), text = text }
+
+            });
+        }
+
         public void SendJson(String json)
         {
             session.Send(json);
@@ -63,6 +82,7 @@ namespace DrawingGameServer.DrawingGame
         public void SendMessage(object message)
         {
             string jsonMsg = JsonConvert.SerializeObject(message);
+            Logger.Info(jsonMsg);
             this.SendJson(jsonMsg);
         }
 

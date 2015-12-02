@@ -37,9 +37,9 @@ namespace DrawingGameServer.DrawingGame
             this.sessions = new List<WebSocketSession>();
             this.players = new Dictionary<String, Player>();
             this.rooms = new Dictionary<int, Room>();
-            this.rooms.Add(-1, new Room { ID = -1, Name = "Lobby" });
-            this.rooms.Add(0, new Room { ID = 0, Name = "TestRoom" });
-            this.rooms.Add(1, new Room { ID = 1, Name = "TestRoom2" });
+            this.rooms.Add(0, new Room { ID = 0, Name = "Main room" });
+            this.rooms.Add(1, new Room { ID = 1, Name = "TestRoom" });
+            this.rooms.Add(2, new Room { ID = 2, Name = "TestRoom2" });
             this.websocketServer = new WebSocketServer();
             this.websocketServer.NewSessionConnected += new SessionHandler<WebSocketSession>(websocketServer_NewSessionConnected);
             this.websocketServer.SessionClosed += new SessionHandler<WebSocketSession, SuperSocket.SocketBase.CloseReason>(websocketServer_SessionClosed);
@@ -90,29 +90,22 @@ namespace DrawingGameServer.DrawingGame
                     break;
                 case 2://join room
                     currentPlayer.LeaveRoom();
-                    int roomNumber = request.DataJson.ID;
-                    if(!rooms.ContainsKey(roomNumber)) 
+                    int resp = joinRoom(currentPlayer, (int)request.DataJson.ID);
+                    response = new Response
                     {
-                        break;
-                    }
-                    currentPlayer.JoinRoom(rooms[roomNumber]);
-                    //if(!rooms[roomNumber].Players.Any())
-                    //{
-                    //    rooms[roomNumber].currentDrawingPlayer = currentPlayer;
-                    //}
-                    Logger.InfoFormat("Added player {0} to room {1}", currentPlayer.ID, roomNumber);
+                        MessageID = 10002,
+                        Data = new { Status = resp }
+                    };
+                    currentPlayer.SendMessage(response);
+
+                    currentPlayer.CurrentRoom.SendQueueToPlayer(currentPlayer);
                     break;
 
                 case 3: //say
                     if (currentPlayer.CurrentRoom != null)
                     {
-                        response = new Response
-                        {
-                            MessageID = 10003,
-                            Data = request.DataJson
-                        };
-                        response.Data.author = session.SessionID;
-                        currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
+                        currentPlayer.CurrentRoom.PlayerSaidText(currentPlayer, request);
+
                     }
                     break;
 
@@ -152,11 +145,43 @@ namespace DrawingGameServer.DrawingGame
                         currentPlayer.CurrentRoom.Broadcast(response, currentPlayer, currentPlayer);
                     }
                     break;
+                case 9:
+                    currentPlayer.CurrentRoom.Broadcast(new Response()
+                    {
+                        MessageID = 10009,
+                        Data = null
+                    }, currentPlayer, currentPlayer);
+                    break;
+                case 10: //enqueue
+                    currentPlayer.CurrentRoom.addPlayerToQueue(currentPlayer);
+                    break;
+                case 11:
+                    currentPlayer.CurrentRoom.SendQueueToPlayer(currentPlayer);
+                    break;
                 default:
                     //players[session.SessionID].ReceiveMessage(value);
                     break;
             }
-            
+        }
+
+        
+
+        int joinRoom(Player currentPlayer, int roomNumber)
+        {
+
+            if (!rooms.ContainsKey(roomNumber))
+            {
+                return 2001; //Room doesn't exist
+            }
+            Room room = rooms[roomNumber];
+            if (room.Players.Count() >= Room.CAPACITY)
+            {
+                return 2002; //room is full
+            }
+            currentPlayer.JoinRoom(rooms[roomNumber]);
+
+            Logger.InfoFormat("Added player {0} to room {1}", currentPlayer.ID, roomNumber);
+            return 2000;
         }
 
         private void websocketServer_SessionClosed(WebSocketSession session, SuperSocket.SocketBase.CloseReason closeReason)
